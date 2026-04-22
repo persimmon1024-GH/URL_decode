@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>URL Decoder / Encoder v2.0</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-elevated: rgba(255, 255, 255, 0.82);
+      --surface: #ffffff;
+      --surface-2: #eef3ff;
+      --text: #111827;
+      --muted: #5b6475;
+      --line: rgba(17, 24, 39, 0.1);
+      --line-strong: rgba(17, 24, 39, 0.16);
+      --primary: #2457ff;
+      --primary-strong: #1744d6;
+      --primary-soft: rgba(36, 87, 255, 0.10);
+      --success: #0f9d58;
+      --warn: #b86d00;
+      --danger: #c53b32;
+      --shadow: 0 20px 60px rgba(25, 35, 58, 0.12);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --container: 1240px;
+      --focus: 0 0 0 4px rgba(36, 87, 255, 0.18);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1020;
+      --bg-elevated: rgba(17, 24, 39, 0.78);
+      --surface: #0f172a;
+      --surface-2: #101d3e;
+      --text: #eff4ff;
+      --muted: #a4afc3;
+      --line: rgba(255, 255, 255, 0.1);
+      --line-strong: rgba(255, 255, 255, 0.16);
+      --primary: #79a4ff;
+      --primary-strong: #9ab8ff;
+      --primary-soft: rgba(121, 164, 255, 0.14);
+      --success: #6edc9f;
+      --warn: #ffbe68;
+      --danger: #ff8d85;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      --focus: 0 0 0 4px rgba(121, 164, 255, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--ui);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(36, 87, 255, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 157, 88, 0.08), transparent 26%),
+        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 88%, #ffffff 12%));
+    }
+
+    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
+      body { background: var(--bg); }
+    }
+
+    .page {
+      width: min(100%, var(--container));
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+
+    .shell {
+      border: 1px solid var(--line);
+      background: var(--bg-elevated);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 72%, white 28%));
+      color: white;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 22px rgba(36, 87, 255, 0.24);
+      flex-shrink: 0;
+    }
+
+    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
+      .logo { background: linear-gradient(135deg, var(--primary), var(--primary-strong)); }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.2vw, 2rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    button,
+    .history-item,
+    .segmented input + label {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 11px 15px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      min-height: 44px;
+    }
+
+    button:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+    button:active { transform: translateY(0); }
+    button:focus-visible,
+    textarea:focus-visible,
+    .history-item:focus-visible,
+    .segmented input:focus-visible + label {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 10px 24px rgba(36, 87, 255, 0.22);
+    }
+
+    .btn-primary:hover { background: var(--primary-strong); }
+    .btn-soft { background: var(--primary-soft); border-color: transparent; }
+    .btn-ghost { background: transparent; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    main {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .banner {
+      display: none;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+      background: linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,0));
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .banner.show { display: flex; }
+    .banner-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+
+    .controls {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: repeat(3, minmax(92px, 1fr));
+      gap: 6px;
+      padding: 6px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      width: min(100%, 440px);
+    }
+
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented label {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      padding: 8px 12px;
+      text-align: center;
+      transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .segmented input:checked + label {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.03fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: 430px;
+    }
+
+    .card-head,
+    .card-foot {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-head {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-foot {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .label-wrap {
+      display: grid;
+      gap: 4px;
+    }
+
+    .label-title {
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .label-help {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .textarea-wrap {
+      padding: 16px;
+      padding-top: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px 18px;
+      font: 500 0.97rem/1.6 var(--mono);
+      color: var(--text);
+      background: color-mix(in srgb, var(--surface) 74%, var(--surface-2) 26%);
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
+      textarea { background: var(--surface); }
+    }
+
+    textarea::placeholder { color: color-mix(in srgb, var(--muted) 75%, transparent 25%); }
+    textarea:focus { border-color: color-mix(in srgb, var(--primary) 48%, var(--line) 52%); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .meta-pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .history {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-empty {
+      color: var(--muted);
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      background: color-mix(in srgb, var(--surface) 80%, var(--surface-2) 20%);
+    }
+
+    .history-item {
+      width: 100%;
+      text-align: left;
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: grid;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .history-top,
+    .history-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .history-snippet {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .statusbar {
+      position: sticky;
+      bottom: 16px;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      padding-top: 4px;
+    }
+
+    .toast {
+      pointer-events: auto;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      background: rgba(17,24,39,0.94);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+      font-weight: 600;
+      font-size: 0.93rem;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    footer {
+      padding: 16px 22px 22px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .card { min-height: auto; }
+      textarea { min-height: 240px; }
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 14px 10px 34px; }
+      header, main, footer { padding-left: 14px; padding-right: 14px; }
+      .segmented { width: 100%; }
+      .controls-row, .card-head, .card-foot, .history-head, .topbar { align-items: stretch; }
+      .toolbar, .action-group { width: 100%; }
+      .toolbar button, .action-group button { flex: 1 1 calc(50% - 5px); }
+      .banner { flex-direction: column; }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .page {
+        width: 100%;
+        padding: 0;
+      }
+      .shell {
+        box-shadow: none;
+        border: none;
+        background: #ffffff;
+      }
+      .toolbar,
+      .controls,
+      .history,
+      .statusbar,
+      .banner,
+      .chips,
+      .meta,
+      .label-help,
+      .action-group,
+      .card-foot button,
+      .history-head button {
+        display: none !important;
+      }
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .panel,
+      textarea {
+        border-color: #c9ceda;
+        background: #ffffff;
+      }
+      textarea {
+        min-height: 180px;
+        color: #111827;
+      }
+      footer {
+        color: #475569;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header>
+        <div class="topbar">
+          <div class="brand">
+            <div class="logo" aria-hidden="true">↔</div>
+            <div>
+              <h1>URL Decoder / Encoder v2.0</h1>
+              <p class="subtitle">単体HTML・オフライン対応。デコード / エンコード / スマートエンコードを1画面で操作できます。</p>
+            </div>
+          </div>
+          <div class="toolbar">
+            <button type="button" id="themeBtn" class="btn-ghost" aria-pressed="false">🌙 Theme</button>
+            <button type="button" id="printBtn" class="btn-ghost">🖨️ Print / PDF</button>
+          </div>
+        </div>
+        <div class="chips" aria-label="機能サマリー">
+          <div class="chip">🔒 Offline only</div>
+          <div class="chip">⌘ / Ctrl + Enter で変換</div>
+          <div class="chip">📚 History 5 items</div>
+          <div class="chip">🎨 Light / Dark mode</div>
+        </div>
+      </header>
+
+      <main>
+        <section class="banner" id="suggestionBanner" aria-live="polite">
+          <div>
+            <div class="banner-title" id="bannerTitle">入力内容に合わせた提案</div>
+            <div id="bannerText">現在のモードより、別のモードの方が適している可能性があります。</div>
+          </div>
+          <div class="action-group">
+            <button type="button" id="bannerAction" class="btn-soft">このモードに切り替える</button>
+            <button type="button" id="bannerDismiss" class="btn-ghost">閉じる</button>
+          </div>
+        </section>
+
+        <section class="panel controls" aria-labelledby="controlsTitle">
+          <div class="controls-row">
+            <div>
+              <div id="controlsTitle" class="label-title">変換モード</div>
+              <div class="label-help">フルURLなら Smart Encode、%XX 文字列なら Decode が便利です。</div>
+            </div>
+            <div class="segmented" role="radiogroup" aria-label="変換モード選択">
+              <input type="radio" id="modeDecode" name="mode" value="decode" checked />
+              <label for="modeDecode">Decode</label>
+              <input type="radio" id="modeEncode" name="mode" value="encode" />
+              <label for="modeEncode">Encode</label>
+              <input type="radio" id="modeSmart" name="mode" value="smart" />
+              <label for="modeSmart">Smart Encode</label>
+            </div>
+          </div>
+          <div class="action-group">
+            <button type="button" id="transformBtn" class="btn-primary">Transform</button>
+            <button type="button" id="swapBtn">Swap</button>
+            <button type="button" id="clearBtn" class="btn-ghost">Clear</button>
+          </div>
+        </section>
+
+        <section class="layout" aria-label="変換エリア">
+          <article class="panel card">
+            <div class="card-head">
+              <div class="label-wrap">
+                <div class="label-title">Input</div>
+                <div class="label-help">通常テキスト、URL、または URL エンコード済み文字列を入力してください。</div>
+              </div>
+              <div class="meta">
+                <span class="meta-pill" id="modePill">Mode: Decode</span>
+                <span class="meta-pill" id="inputSizePill">0 chars</span>
+              </div>
+            </div>
+            <div class="textarea-wrap">
+              <label class="sr-only" for="inputText">Input text</label>
+              <textarea id="inputText" spellcheck="false" placeholder="例: https://example.com/検索?q=こんにちは 世界&amp;tag=a+b&#10;または&#10;hello%20world%20%E3%81%82"></textarea>
+            </div>
+            <div class="card-foot">
+              <span>貼り付け後に <strong>Transform</strong>。または <strong>Ctrl / Cmd + Enter</strong>。</span>
+              <div class="action-group">
+                <button type="button" id="pasteBtn" class="btn-ghost">Paste</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel card">
+            <div class="card-head">
+              <div class="label-wrap">
+                <div class="label-title">Output</div>
+                <div class="label-help">結果はここに表示されます。クリックで全選択しません。安全のため HTML としては描画しません。</div>
+              </div>
+              <div class="meta">
+                <span class="meta-pill" id="outputSizePill">0 chars</span>
+                <span class="meta-pill" id="urlPill">Not a URL</span>
+              </div>
+            </div>
+            <div class="textarea-wrap">
+              <label class="sr-only" for="outputText">Output text</label>
+              <textarea id="outputText" spellcheck="false" readonly placeholder="変換結果がここに表示されます"></textarea>
+            </div>
+            <div class="card-foot">
+              <span id="statusText">Ready.</span>
+              <div class="action-group">
+                <button type="button" id="copyBtn">Copy</button>
+                <button type="button" id="openBtn">Open</button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel history" aria-labelledby="historyTitle">
+          <div class="history-head">
+            <div>
+              <div id="historyTitle" class="label-title">Recent History</div>
+              <div class="label-help">直近5件を保存します。クリックすると入力・出力・モードを復元します。</div>
+            </div>
+            <button type="button" id="clearHistoryBtn" class="btn-ghost">Clear History</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <div class="history-empty">まだ履歴はありません。変換するとここに最大5件表示されます。</div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        このツールは単一HTMLで完結し、外部ライブラリ・CDN・外部通信を使用しません。履歴とテーマ設定はブラウザの localStorage に保存されます。
+      </footer>
+    </div>
+
+    <div class="statusbar" aria-live="polite" aria-atomic="true">
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'url-tool-history-v2';
+      const THEME_KEY = 'url-tool-theme-v2';
+      const MAX_HISTORY = 5;
+
+      const els = {
+        body: document.body,
+        input: document.getElementById('inputText'),
+        output: document.getElementById('outputText'),
+        transformBtn: document.getElementById('transformBtn'),
+        swapBtn: document.getElementById('swapBtn'),
+        clearBtn: document.getElementById('clearBtn'),
+        copyBtn: document.getElementById('copyBtn'),
+        openBtn: document.getElementById('openBtn'),
+        pasteBtn: document.getElementById('pasteBtn'),
+        printBtn: document.getElementById('printBtn'),
+        clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+        themeBtn: document.getElementById('themeBtn'),
+        historyList: document.getElementById('historyList'),
+        statusText: document.getElementById('statusText'),
+        modePill: document.getElementById('modePill'),
+        inputSizePill: document.getElementById('inputSizePill'),
+        outputSizePill: document.getElementById('outputSizePill'),
+        urlPill: document.getElementById('urlPill'),
+        toast: document.getElementById('toast'),
+        banner: document.getElementById('suggestionBanner'),
+        bannerTitle: document.getElementById('bannerTitle'),
+        bannerText: document.getElementById('bannerText'),
+        bannerAction: document.getElementById('bannerAction'),
+        bannerDismiss: document.getElementById('bannerDismiss'),
+        modeRadios: Array.from(document.querySelectorAll('input[name="mode"]')),
+      };
+
+      let bannerSuggestion = null;
+      let toastTimer = null;
+      let bannerDismissSignature = '';
+
+      function getMode() {
+        const checked = els.modeRadios.find(r => r.checked);
+        return checked ? checked.value : 'decode';
+      }
+
+      function setMode(mode) {
+        const target = els.modeRadios.find(r => r.value === mode);
+        if (target) {
+          target.checked = true;
+          updateModeUI();
+          updateSuggestion();
+        }
+      }
+
+      function labelMode(mode) {
+        switch (mode) {
+          case 'encode': return 'Encode';
+          case 'smart': return 'Smart Encode';
+          default: return 'Decode';
+        }
+      }
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        els.toast.textContent = message;
+        els.toast.classList.add('show');
+        toastTimer = window.setTimeout(() => {
+          els.toast.classList.remove('show');
+        }, 2200);
+      }
+
+      function updateStatus(message, isError = false) {
+        els.statusText.textContent = message;
+        els.statusText.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+      }
+
+      function updateCounts() {
+        const inLen = els.input.value.length;
+        const outLen = els.output.value.length;
+        els.inputSizePill.textContent = `${inLen} chars`;
+        els.outputSizePill.textContent = `${outLen} chars`;
+        els.urlPill.textContent = isHttpUrl(els.output.value.trim()) ? 'Valid URL' : 'Not a URL';
+        updateOpenState();
+      }
+
+      function updateModeUI() {
+        els.modePill.textContent = `Mode: ${labelMode(getMode())}`;
+      }
+
+      function updateOpenState() {
+        const hasUrl = isHttpUrl(els.output.value.trim());
+        els.openBtn.style.opacity = hasUrl ? '1' : '0.68';
+      }
+
+      function isHttpUrl(value) {
+        if (!value) return false;
+        try {
+          const url = new URL(value);
+          return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
+          return false;
+        }
+      }
+
+      function isAbsoluteUrl(value) {
+        try {
+          const url = new URL(value);
+          return Boolean(url.protocol && url.host);
+        } catch {
+          return false;
+        }
+      }
+
+      function looksEncoded(value) {
+        return /%[0-9A-Fa-f]{2}/.test(value) || /\+/.test(value);
+      }
+
+      function looksPlainText(value) {
+        return /[\u3040-\u30ff\u3400-\u9fff\s]/.test(value) || /[^\x00-\x7F]/.test(value);
+      }
+
+      function safeDecode(value) {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      }
+
+      function decodeText(value) {
+        return decodeURIComponent(value.replace(/\+/g, ' '));
+      }
+
+      function encodeText(value) {
+        return encodeURIComponent(value);
+      }
+
+      function encodePathPreservingSlashes(pathname) {
+        const segments = pathname.split('/');
+        return segments
+          .map(segment => encodeURIComponent(safeDecode(segment)))
+          .join('/');
+      }
+
+      function smartEncode(value) {
+        const input = value.trim();
+        if (!isAbsoluteUrl(input)) {
+          return encodeText(value);
+        }
+
+        const url = new URL(input);
+        const base = `${url.protocol}//${url.host}`;
+        const path = encodePathPreservingSlashes(url.pathname || '/');
+
+        const params = [];
+        url.searchParams.forEach((paramValue, paramKey) => {
+          params.push(`${encodeURIComponent(paramKey)}=${encodeURIComponent(paramValue)}`);
+        });
+        const search = params.length ? `?${params.join('&')}` : '';
+
+        let hash = '';
+        if (url.hash) {
+          const rawHash = url.hash.slice(1);
+          hash = `#${encodeURIComponent(safeDecode(rawHash))}`;
+        }
+
+        return `${base}${path}${search}${hash}`;
+      }
+
+      function currentTimestamp() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mi = String(now.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+      }
+
+      function saveHistory(entry) {
+        try {
+          const history = loadHistory();
+          const deduped = history.filter(item => !(item.input === entry.input && item.output === entry.output && item.mode === entry.mode));
+          deduped.unshift(entry);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped.slice(0, MAX_HISTORY)));
+          renderHistory();
+        } catch {
+          updateStatus('History could not be saved in this browser mode.');
+        }
+      }
+
+      function loadHistory() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function clearHistory() {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          renderHistory();
+          showToast('History cleared');
+        } catch {
+          updateStatus('History could not be cleared in this browser mode.', true);
+        }
+      }
+
+      function snippet(value) {
+        return value.replace(/\s+/g, ' ').trim().slice(0, 90) || '(empty)';
+      }
+
+      function renderHistory() {
+        const history = loadHistory();
+        els.historyList.innerHTML = '';
+
+        if (!history.length) {
+          const empty = document.createElement('div');
+          empty.className = 'history-empty';
+          empty.textContent = 'まだ履歴はありません。変換するとここに最大5件表示されます。';
+          els.historyList.appendChild(empty);
+          return;
+        }
+
+        history.forEach((item, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'history-item';
+          button.setAttribute('aria-label', `${index + 1}番目の履歴を復元`);
+          button.innerHTML = `
+            <div class="history-top">
+              <strong>${escapeHtml(labelMode(item.mode))}</strong>
+              <span class="meta-pill">${escapeHtml(item.time)}</span>
+            </div>
+            <div class="history-snippet">In: ${escapeHtml(snippet(item.input))}</div>
+            <div class="history-bottom">
+              <div class="history-snippet">Out: ${escapeHtml(snippet(item.output))}</div>
+              <span class="meta-pill">Restore</span>
+            </div>
+          `;
+          button.addEventListener('click', () => {
+            els.input.value = item.input || '';
+            els.output.value = item.output || '';
+            setMode(item.mode || 'decode');
+            updateCounts();
+            updateStatus('History restored');
+            showToast('History restored');
+          });
+          els.historyList.appendChild(button);
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      async function copyToClipboard(text) {
+        if (!text) {
+          updateStatus('Nothing to copy yet.', true);
+          showToast('Nothing to copy');
+          return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        temp.setAttribute('readonly', 'readonly');
+        temp.style.position = 'fixed';
+        temp.style.top = '-9999px';
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+      }
+
+      async function pasteFromClipboard() {
+        if (navigator.clipboard && window.isSecureContext) {
+          const text = await navigator.clipboard.readText();
+          els.input.value = text;
+          updateCounts();
+          updateSuggestion();
+          showToast('Pasted from clipboard');
+          return;
+        }
+        updateStatus('Paste is available in secure contexts only. Use browser paste instead.', true);
+      }
+
+      function reverseMode(mode) {
+        if (mode === 'decode') return 'encode';
+        return 'decode';
+      }
+
+      function transform() {
+        const input = els.input.value;
+        const mode = getMode();
+
+        if (!input) {
+          els.output.value = '';
+          updateCounts();
+          updateStatus('Input is empty.');
+          return;
+        }
+
+        try {
+          let result = '';
+          if (mode === 'decode') {
+            result = decodeText(input);
+          } else if (mode === 'smart') {
+            result = smartEncode(input);
+          } else {
+            result = encodeText(input);
+          }
+
+          els.output.value = result;
+          updateCounts();
+          updateStatus(`${labelMode(mode)} completed.`);
+
+          saveHistory({
+            input,
+            output: result,
+            mode,
+            time: currentTimestamp(),
+          });
+        } catch (error) {
+          els.output.value = '';
+          updateCounts();
+          updateStatus(`Conversion failed: ${error.message}`, true);
+        }
+      }
+
+      function swapValues() {
+        const currentMode = getMode();
+        const currentInput = els.input.value;
+        const currentOutput = els.output.value;
+        els.input.value = currentOutput;
+        els.output.value = currentInput;
+        setMode(reverseMode(currentMode));
+        updateCounts();
+        updateStatus('Input and output swapped. Mode reversed.');
+        showToast('Swapped');
+      }
+
+      function clearAll() {
+        els.input.value = '';
+        els.output.value = '';
+        updateCounts();
+        updateSuggestion();
+        updateStatus('Cleared.');
+      }
+
+      function updateSuggestion() {
+        const text = els.input.value.trim();
+        const mode = getMode();
+        const signature = `${mode}::${text}`;
+
+        if (!text || bannerDismissSignature === signature) {
+          hideBanner();
+          return;
+        }
+
+        if (mode === 'decode' && !looksEncoded(text)) {
+          showBanner('Encode をおすすめします', '現在は Decode モードですが、入力に %XX や + が見当たりません。通常テキストなら Encode の方が自然です。', 'encode');
+          return;
+        }
+
+        if (mode === 'encode' && isAbsoluteUrl(text)) {
+          showBanner('Smart Encode をおすすめします', 'フルURLのように見えます。スキームとホストは保持し、パスとクエリだけを変換する Smart Encode が向いています。', 'smart');
+          return;
+        }
+
+        if (mode === 'encode' && looksEncoded(text) && !looksPlainText(text)) {
+          showBanner('Decode をおすすめします', 'すでに URL エンコード済みの文字列に見えます。Decode で読める形に戻せます。', 'decode');
+          return;
+        }
+
+        if (mode === 'smart' && !isAbsoluteUrl(text)) {
+          showBanner('Encode をおすすめします', 'Smart Encode はフルURL入力向けです。通常文字列や相対パスなら Encode の方が分かりやすいです。', 'encode');
+          return;
+        }
+
+        hideBanner();
+      }
+
+      function showBanner(title, text, suggestedMode) {
+        bannerSuggestion = suggestedMode;
+        els.bannerTitle.textContent = title;
+        els.bannerText.textContent = text;
+        els.banner.classList.add('show');
+      }
+
+      function hideBanner() {
+        bannerSuggestion = null;
+        els.banner.classList.remove('show');
+      }
+
+      function applyTheme(theme) {
+        const resolved = theme === 'dark' ? 'dark' : 'light';
+        els.body.setAttribute('data-theme', resolved);
+        els.themeBtn.textContent = resolved === 'dark' ? '☀️ Theme' : '🌙 Theme';
+        els.themeBtn.setAttribute('aria-pressed', String(resolved === 'dark'));
+        try {
+          localStorage.setItem(THEME_KEY, resolved);
+        } catch {}
+      }
+
+      function initTheme() {
+        let stored = null;
+        try {
+          stored = localStorage.getItem(THEME_KEY);
+        } catch {}
+        if (stored === 'light' || stored === 'dark') {
+          applyTheme(stored);
+          return;
+        }
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(prefersDark ? 'dark' : 'light');
+      }
+
+      els.transformBtn.addEventListener('click', transform);
+      els.swapBtn.addEventListener('click', swapValues);
+      els.clearBtn.addEventListener('click', clearAll);
+      els.printBtn.addEventListener('click', () => window.print());
+      els.clearHistoryBtn.addEventListener('click', clearHistory);
+      els.copyBtn.addEventListener('click', async () => {
+        try {
+          await copyToClipboard(els.output.value);
+          updateStatus('Copied to clipboard.');
+          showToast('Copied');
+        } catch {
+          updateStatus('Copy failed in this browser.', true);
+        }
+      });
+      els.openBtn.addEventListener('click', () => {
+        const value = els.output.value.trim();
+        if (!isHttpUrl(value)) {
+          updateStatus('Output is not an http/https URL.', true);
+          return;
+        }
+        window.open(value, '_blank', 'noopener,noreferrer');
+      });
+      els.pasteBtn.addEventListener('click', async () => {
+        try {
+          await pasteFromClipboard();
+        } catch {
+          updateStatus('Paste failed in this browser.', true);
+        }
+      });
+      els.themeBtn.addEventListener('click', () => {
+        const next = els.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+      });
+
+      els.input.addEventListener('input', () => {
+        updateCounts();
+        updateSuggestion();
+      });
+
+      els.modeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          bannerDismissSignature = '';
+          updateModeUI();
+          updateSuggestion();
+        });
+      });
+
+      els.bannerAction.addEventListener('click', () => {
+        if (!bannerSuggestion) return;
+        setMode(bannerSuggestion);
+        showToast(`Switched to ${labelMode(bannerSuggestion)}`);
+      });
+
+      els.bannerDismiss.addEventListener('click', () => {
+        bannerDismissSignature = `${getMode()}::${els.input.value.trim()}`;
+        hideBanner();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+          event.preventDefault();
+          transform();
+          return;
+        }
+      });
+
+      initTheme();
+      updateModeUI();
+      updateCounts();
+      renderHistory();
+      updateSuggestion();
+      updateStatus('Ready.');
+    })();
+  </script>
+</body>
+</html>
