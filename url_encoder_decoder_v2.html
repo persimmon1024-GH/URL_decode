@@ -4,1179 +4,818 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
-  <title>URL Decoder / Encoder v2.0</title>
+  <title>Nexus URL - Encoder / Decoder</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #f5f7fb;
-      --bg-elevated: rgba(255, 255, 255, 0.82);
-      --surface: #ffffff;
-      --surface-2: #eef3ff;
-      --text: #111827;
-      --muted: #5b6475;
-      --line: rgba(17, 24, 39, 0.1);
-      --line-strong: rgba(17, 24, 39, 0.16);
-      --primary: #2457ff;
-      --primary-strong: #1744d6;
-      --primary-soft: rgba(36, 87, 255, 0.10);
-      --success: #0f9d58;
-      --warn: #b86d00;
-      --danger: #c53b32;
-      --shadow: 0 20px 60px rgba(25, 35, 58, 0.12);
-      --radius-xl: 24px;
-      --radius-lg: 18px;
-      --radius-md: 14px;
-      --radius-sm: 10px;
-      --container: 1240px;
-      --focus: 0 0 0 4px rgba(36, 87, 255, 0.18);
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      /* Palette: Vibrant Indigo & Clear Slate */
+      --accent: #4f46e5;
+      --accent-strong: #4338ca;
+      --accent-soft: rgba(79, 70, 229, 0.1);
+      
+      --bg: #f8fafc;
+      --surface: rgba(255, 255, 255, 0.65);
+      --surface-elevated: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 24px 60px -15px rgba(0, 0, 0, 0.12);
+      
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      
+      --radius-xl: 32px;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --glass: saturate(180%) blur(20px);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     [data-theme="dark"] {
-      --bg: #0b1020;
-      --bg-elevated: rgba(17, 24, 39, 0.78);
-      --surface: #0f172a;
-      --surface-2: #101d3e;
-      --text: #eff4ff;
-      --muted: #a4afc3;
-      --line: rgba(255, 255, 255, 0.1);
-      --line-strong: rgba(255, 255, 255, 0.16);
-      --primary: #79a4ff;
-      --primary-strong: #9ab8ff;
-      --primary-soft: rgba(121, 164, 255, 0.14);
-      --success: #6edc9f;
-      --warn: #ffbe68;
-      --danger: #ff8d85;
-      --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
-      --focus: 0 0 0 4px rgba(121, 164, 255, 0.22);
+      --bg: #030712;
+      --surface: rgba(17, 24, 39, 0.6);
+      --surface-elevated: #111827;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(248, 250, 252, 0.08);
+      --border-strong: rgba(248, 250, 252, 0.15);
+      --shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 24px 60px -15px rgba(0, 0, 0, 0.4);
+      --accent: #818cf8;
+      --accent-strong: #a5b4fc;
+      --accent-soft: rgba(129, 140, 248, 0.12);
     }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      margin: 0;
       min-height: 100vh;
-      font-family: var(--ui);
+      font-family: var(--font-main);
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(36, 87, 255, 0.12), transparent 28%),
-        radial-gradient(circle at top right, rgba(15, 157, 88, 0.08), transparent 26%),
-        linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 88%, #ffffff 12%));
-    }
-
-    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
-      body { background: var(--bg); }
-    }
-
-    .page {
-      width: min(100%, var(--container));
-      margin: 0 auto;
-      padding: 28px 18px 56px;
-    }
-
-    .shell {
-      border: 1px solid var(--line);
-      background: var(--bg-elevated);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-radius: 30px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    header {
-      padding: 24px 24px 18px;
-      border-bottom: 1px solid var(--line);
-      display: grid;
-      gap: 16px;
-    }
-
-    .topbar {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, color-mix(in srgb, var(--accent) 5%, transparent) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, color-mix(in srgb, var(--success) 5%, transparent) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, color-mix(in srgb, var(--warning) 5%, transparent) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, color-mix(in srgb, var(--danger) 5%, transparent) 0px, transparent 50%);
+      line-height: 1.5;
+      overflow-x: hidden;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+    }
+
+    .app-container {
+      width: min(100% - 40px, 1100px);
+      margin: 40px auto;
+      flex: 1;
+    }
+
+    /* --- Header --- */
+    .header {
+      display: flex;
       justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 20px;
     }
 
     .brand {
       display: flex;
-      gap: 14px;
       align-items: center;
-    }
-
-    .logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      font-size: 22px;
-      background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 72%, white 28%));
-      color: white;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 22px rgba(36, 87, 255, 0.24);
-      flex-shrink: 0;
-    }
-
-    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
-      .logo { background: linear-gradient(135deg, var(--primary), var(--primary-strong)); }
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.35rem, 2.2vw, 2rem);
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 0.98rem;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    button,
-    .history-item,
-    .segmented input + label {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button {
-      appearance: none;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 11px 15px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-      min-height: 44px;
-    }
-
-    button:hover { transform: translateY(-1px); border-color: var(--line-strong); }
-    button:active { transform: translateY(0); }
-    button:focus-visible,
-    textarea:focus-visible,
-    .history-item:focus-visible,
-    .segmented input:focus-visible + label {
-      outline: none;
-      box-shadow: var(--focus);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 10px 24px rgba(36, 87, 255, 0.22);
-    }
-
-    .btn-primary:hover { background: var(--primary-strong); }
-    .btn-soft { background: var(--primary-soft); border-color: transparent; }
-    .btn-ghost { background: transparent; }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 12px;
-      border-radius: 999px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    main {
-      padding: 22px;
-      display: grid;
-      gap: 18px;
-    }
-
-    .banner {
-      display: none;
-      align-items: start;
-      justify-content: space-between;
-      gap: 14px;
-      background: linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,0));
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-    }
-
-    .banner.show { display: flex; }
-    .banner-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .panel {
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--line);
-      background: var(--surface);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
-    }
-
-    .controls {
-      padding: 18px;
-      display: grid;
       gap: 16px;
     }
 
-    .controls-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .segmented {
-      display: inline-grid;
-      grid-template-columns: repeat(3, minmax(92px, 1fr));
-      gap: 6px;
-      padding: 6px;
-      border-radius: 999px;
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      width: min(100%, 440px);
-    }
-
-    .segmented input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .segmented label {
-      min-height: 44px;
+    .logo-box {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border-radius: 16px;
       display: grid;
       place-items: center;
-      border-radius: 999px;
-      font-weight: 700;
-      color: var(--muted);
-      cursor: pointer;
-      user-select: none;
-      padding: 8px 12px;
-      text-align: center;
-      transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+      color: white;
+      box-shadow: 0 10px 20px -5px color-mix(in srgb, var(--accent) 40%, transparent);
+      transition: var(--transition);
+    }
+    .logo-box:hover { transform: rotate(-5deg) scale(1.05); }
+
+    .header-text h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 2px;
+      background: linear-gradient(to bottom right, var(--text), color-mix(in srgb, var(--text) 70%, transparent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-text p {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
-    .segmented input:checked + label {
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* --- Glass Shell --- */
+    .glass-outer {
       background: var(--surface);
-      color: var(--text);
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 1.03fr 1fr;
-      gap: 18px;
+    /* --- Mode Switcher --- */
+    .mode-tabs {
+      display: flex;
+      background: var(--surface-elevated);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+      width: fit-content;
+      gap: 4px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    .card {
-      display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      min-height: 430px;
+    .mode-tab {
+      position: relative;
     }
-
-    .card-head,
-    .card-foot {
-      padding: 14px 16px;
+    .mode-tab input {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+    .mode-tab label {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .mode-tab input:checked + label {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent) 30%, transparent);
     }
 
-    .card-head {
-      border-bottom: 1px solid var(--line);
-    }
-
-    .card-foot {
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .label-wrap {
+    /* --- Layout --- */
+    .main-grid {
       display: grid;
-      gap: 4px;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      position: relative;
     }
 
-    .label-title {
-      font-weight: 800;
-      letter-spacing: -0.01em;
+    .connector {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .label-help {
-      color: var(--muted);
-      font-size: 0.94rem;
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .connector { 
+        position: static; 
+        transform: none; 
+        flex-direction: row; 
+        justify-content: center;
+        margin: 12px 0;
+      }
     }
 
-    .textarea-wrap {
-      padding: 16px;
-      padding-top: 14px;
+    .io-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 8px;
+    }
+
+    .card-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+
+    .editor-box {
+      position: relative;
+      background: var(--surface-elevated);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+    .editor-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+      transform: translateY(-2px);
     }
 
     textarea {
       width: 100%;
-      min-height: 300px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px 18px;
-      font: 500 0.97rem/1.6 var(--mono);
+      height: 280px;
+      background: transparent;
+      border: none;
+      padding: 20px;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
       color: var(--text);
-      background: color-mix(in srgb, var(--surface) 74%, var(--surface-2) 26%);
-      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+      outline: none;
+    }
+    textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.5;
     }
 
-    @supports not (background: color-mix(in srgb, white 50%, black 50%)) {
-      textarea { background: var(--surface); }
-    }
-
-    textarea::placeholder { color: color-mix(in srgb, var(--muted) 75%, transparent 25%); }
-    textarea:focus { border-color: color-mix(in srgb, var(--primary) 48%, var(--line) 52%); }
-
-    .meta {
+    .card-footer {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .meta-pill {
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: var(--surface-2);
-      color: var(--muted);
-      font-size: 0.84rem;
-    }
-
-    .action-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .history {
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .history-head {
-      display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 8px;
     }
 
-    .history-list {
-      display: grid;
+    /* --- Buttons --- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       gap: 10px;
-    }
-
-    .history-empty {
-      color: var(--muted);
-      border: 1px dashed var(--line-strong);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      background: color-mix(in srgb, var(--surface) 80%, var(--surface-2) 20%);
-    }
-
-    .history-item {
-      width: 100%;
-      text-align: left;
-      border-radius: 18px;
-      padding: 14px 16px;
-      display: grid;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--line);
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 15px;
       cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border-strong);
+      background: var(--surface-elevated);
+      color: var(--text);
+      user-select: none;
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--bg);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-strong);
+      box-shadow: 0 12px 28px -6px color-mix(in srgb, var(--accent) 50%, transparent);
     }
 
-    .history-top,
-    .history-bottom {
+    .btn-circle {
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 999px;
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn svg { width: 18px; height: 18px; stroke-width: 2.2px; }
+
+    /* --- History Section --- */
+    .history-section {
+      margin-top: 48px;
+    }
+    .history-header {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
       align-items: center;
-      flex-wrap: wrap;
+      margin-bottom: 20px;
     }
-
-    .history-snippet {
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.92rem;
+    .history-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .history-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .history-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .history-item:hover {
+      background: var(--surface-elevated);
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+    .hist-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hist-mode {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .hist-snippet {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
+      opacity: 0.8;
     }
 
-    .statusbar {
-      position: sticky;
-      bottom: 16px;
-      z-index: 10;
+    /* --- Toast --- */
+    .toast-container {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
       display: flex;
-      justify-content: center;
-      pointer-events: none;
-      padding-top: 4px;
+      flex-direction: column;
+      gap: 8px;
     }
-
     .toast {
-      pointer-events: auto;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.18s ease, transform 0.18s ease;
-      background: rgba(17,24,39,0.94);
+      background: #1e293b;
       color: white;
-      padding: 12px 16px;
+      padding: 12px 24px;
       border-radius: 999px;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+      font-size: 14px;
       font-weight: 600;
-      font-size: 0.93rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+    @keyframes toastIn { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    /* --- Banner --- */
+    .banner {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      animation: fadeIn 0.3s ease;
     }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
-    }
+    .banner.show { display: flex; }
+    .banner-content { font-size: 14px; }
+    .banner-content strong { display: block; margin-bottom: 2px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     footer {
-      padding: 16px 22px 22px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.92rem;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    @media (max-width: 980px) {
-      .layout { grid-template-columns: 1fr; }
-      .card { min-height: auto; }
-      textarea { min-height: 240px; }
-    }
-
-    @media (max-width: 640px) {
-      .page { padding: 14px 10px 34px; }
-      header, main, footer { padding-left: 14px; padding-right: 14px; }
-      .segmented { width: 100%; }
-      .controls-row, .card-head, .card-foot, .history-head, .topbar { align-items: stretch; }
-      .toolbar, .action-group { width: 100%; }
-      .toolbar button, .action-group button { flex: 1 1 calc(50% - 5px); }
-      .banner { flex-direction: column; }
-    }
-
+    /* --- Print --- */
     @media print {
-      body {
-        background: #ffffff;
-      }
-      .page {
-        width: 100%;
-        padding: 0;
-      }
-      .shell {
-        box-shadow: none;
-        border: none;
-        background: #ffffff;
-      }
-      .toolbar,
-      .controls,
-      .history,
-      .statusbar,
-      .banner,
-      .chips,
-      .meta,
-      .label-help,
-      .action-group,
-      .card-foot button,
-      .history-head button {
-        display: none !important;
-      }
-      .layout {
-        grid-template-columns: 1fr;
-        gap: 18px;
-      }
-      .panel,
-      textarea {
-        border-color: #c9ceda;
-        background: #ffffff;
-      }
-      textarea {
-        min-height: 180px;
-        color: #111827;
-      }
-      footer {
-        color: #475569;
-      }
+      .header-actions, .mode-tabs, .connector, .card-footer, .history-section, .toast-container, .banner { display: none !important; }
+      .app-container { margin: 0; width: 100%; }
+      .glass-outer { border: none; box-shadow: none; background: white; padding: 0; }
+      .main-grid { grid-template-columns: 1fr; gap: 40px; }
+      textarea { border: 1px solid #ccc; height: auto; min-height: 100px; }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="shell">
-      <header>
-        <div class="topbar">
-          <div class="brand">
-            <div class="logo" aria-hidden="true">↔</div>
-            <div>
-              <h1>URL Decoder / Encoder v2.0</h1>
-              <p class="subtitle">単体HTML・オフライン対応。デコード / エンコード / スマートエンコードを1画面で操作できます。</p>
-            </div>
-          </div>
-          <div class="toolbar">
-            <button type="button" id="themeBtn" class="btn-ghost" aria-pressed="false">🌙 Theme</button>
-            <button type="button" id="printBtn" class="btn-ghost">🖨️ Print / PDF</button>
-          </div>
+
+  <div class="app-container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
         </div>
-        <div class="chips" aria-label="機能サマリー">
-          <div class="chip">🔒 Offline only</div>
-          <div class="chip">⌘ / Ctrl + Enter で変換</div>
-          <div class="chip">📚 History 5 items</div>
-          <div class="chip">🎨 Light / Dark mode</div>
+        <div class="header-text">
+          <h1>Nexus URL</h1>
+          <p>Professional Universal Transformer</p>
         </div>
-      </header>
+      </div>
+      <div class="header-actions">
+        <button id="themeBtn" class="btn btn-circle" title="Toggle Theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+        <button id="printBtn" class="btn btn-circle" title="Print to PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        </button>
+      </div>
+    </header>
 
-      <main>
-        <section class="banner" id="suggestionBanner" aria-live="polite">
-          <div>
-            <div class="banner-title" id="bannerTitle">入力内容に合わせた提案</div>
-            <div id="bannerText">現在のモードより、別のモードの方が適している可能性があります。</div>
-          </div>
-          <div class="action-group">
-            <button type="button" id="bannerAction" class="btn-soft">このモードに切り替える</button>
-            <button type="button" id="bannerDismiss" class="btn-ghost">閉じる</button>
-          </div>
-        </section>
+    <main class="glass-outer">
+      <!-- Suggestion Banner -->
+      <div id="banner" class="banner">
+        <div class="banner-content">
+          <strong id="bannerTitle">Suggestion</strong>
+          <span id="bannerText">It looks like another mode might be better.</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="bannerApply" class="btn btn-sm btn-primary">Apply</button>
+          <button id="bannerDismiss" class="btn btn-sm">Hide</button>
+        </div>
+      </div>
 
-        <section class="panel controls" aria-labelledby="controlsTitle">
-          <div class="controls-row">
-            <div>
-              <div id="controlsTitle" class="label-title">変換モード</div>
-              <div class="label-help">フルURLなら Smart Encode、%XX 文字列なら Decode が便利です。</div>
-            </div>
-            <div class="segmented" role="radiogroup" aria-label="変換モード選択">
-              <input type="radio" id="modeDecode" name="mode" value="decode" checked />
-              <label for="modeDecode">Decode</label>
-              <input type="radio" id="modeEncode" name="mode" value="encode" />
-              <label for="modeEncode">Encode</label>
-              <input type="radio" id="modeSmart" name="mode" value="smart" />
-              <label for="modeSmart">Smart Encode</label>
+      <!-- Mode Selector -->
+      <div class="mode-tabs">
+        <div class="mode-tab">
+          <input type="radio" id="modeDecode" name="mode" value="decode" checked>
+          <label for="modeDecode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78z"></path><path d="M12 11c.34-.34.67-.71 1-1.09l.52-2.11L15.33 3l1.83 1.83L20 8l-4.79 1.81-2.11.52c-.38.33-.75.66-1.1 1z"></path></svg>
+            Decode
+          </label>
+        </div>
+        <div class="mode-tab">
+          <input type="radio" id="modeEncode" name="mode" value="encode">
+          <label for="modeEncode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Encode
+          </label>
+        </div>
+        <div class="mode-tab">
+          <input type="radio" id="modeSmart" name="mode" value="smart">
+          <label for="modeSmart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Smart Encode
+          </label>
+        </div>
+      </div>
+
+      <div class="main-grid">
+        <!-- Input -->
+        <section class="io-card">
+          <div class="card-header">
+            <h2 class="card-label">Input</h2>
+            <div class="card-meta">
+              <span id="inputLen" class="pill">0 chars</span>
             </div>
           </div>
-          <div class="action-group">
-            <button type="button" id="transformBtn" class="btn-primary">Transform</button>
-            <button type="button" id="swapBtn">Swap</button>
-            <button type="button" id="clearBtn" class="btn-ghost">Clear</button>
+          <div class="editor-box">
+            <textarea id="inputText" placeholder="Paste URL or encoded text here...&#10;Ctrl + Enter to transform."></textarea>
           </div>
-        </section>
-
-        <section class="layout" aria-label="変換エリア">
-          <article class="panel card">
-            <div class="card-head">
-              <div class="label-wrap">
-                <div class="label-title">Input</div>
-                <div class="label-help">通常テキスト、URL、または URL エンコード済み文字列を入力してください。</div>
-              </div>
-              <div class="meta">
-                <span class="meta-pill" id="modePill">Mode: Decode</span>
-                <span class="meta-pill" id="inputSizePill">0 chars</span>
-              </div>
-            </div>
-            <div class="textarea-wrap">
-              <label class="sr-only" for="inputText">Input text</label>
-              <textarea id="inputText" spellcheck="false" placeholder="例: https://example.com/検索?q=こんにちは 世界&amp;tag=a+b&#10;または&#10;hello%20world%20%E3%81%82"></textarea>
-            </div>
-            <div class="card-foot">
-              <span>貼り付け後に <strong>Transform</strong>。または <strong>Ctrl / Cmd + Enter</strong>。</span>
-              <div class="action-group">
-                <button type="button" id="pasteBtn" class="btn-ghost">Paste</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="panel card">
-            <div class="card-head">
-              <div class="label-wrap">
-                <div class="label-title">Output</div>
-                <div class="label-help">結果はここに表示されます。クリックで全選択しません。安全のため HTML としては描画しません。</div>
-              </div>
-              <div class="meta">
-                <span class="meta-pill" id="outputSizePill">0 chars</span>
-                <span class="meta-pill" id="urlPill">Not a URL</span>
-              </div>
-            </div>
-            <div class="textarea-wrap">
-              <label class="sr-only" for="outputText">Output text</label>
-              <textarea id="outputText" spellcheck="false" readonly placeholder="変換結果がここに表示されます"></textarea>
-            </div>
-            <div class="card-foot">
-              <span id="statusText">Ready.</span>
-              <div class="action-group">
-                <button type="button" id="copyBtn">Copy</button>
-                <button type="button" id="openBtn">Open</button>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section class="panel history" aria-labelledby="historyTitle">
-          <div class="history-head">
-            <div>
-              <div id="historyTitle" class="label-title">Recent History</div>
-              <div class="label-help">直近5件を保存します。クリックすると入力・出力・モードを復元します。</div>
-            </div>
-            <button type="button" id="clearHistoryBtn" class="btn-ghost">Clear History</button>
-          </div>
-          <div class="history-list" id="historyList">
-            <div class="history-empty">まだ履歴はありません。変換するとここに最大5件表示されます。</div>
+          <div class="card-footer">
+            <button id="pasteBtn" class="btn btn-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              Paste
+            </button>
+            <button id="clearBtn" class="btn btn-sm">Clear</button>
           </div>
         </section>
-      </main>
 
-      <footer>
-        このツールは単一HTMLで完結し、外部ライブラリ・CDN・外部通信を使用しません。履歴とテーマ設定はブラウザの localStorage に保存されます。
-      </footer>
-    </div>
+        <!-- Connector Buttons -->
+        <div class="connector">
+          <button id="transformBtn" class="btn btn-primary btn-circle" title="Transform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <button id="swapBtn" class="btn btn-circle" title="Swap Input/Output">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          </button>
+        </div>
 
-    <div class="statusbar" aria-live="polite" aria-atomic="true">
-      <div class="toast" id="toast"></div>
-    </div>
+        <!-- Output -->
+        <section class="io-card">
+          <div class="card-header">
+            <h2 class="card-label">Output</h2>
+            <div class="card-meta">
+              <span id="outputLen" class="pill">0 chars</span>
+              <span id="urlPill" class="pill" style="display:none">Link Detected</span>
+            </div>
+          </div>
+          <div class="editor-box">
+            <textarea id="outputText" readonly placeholder="Result will appear here..."></textarea>
+          </div>
+          <div class="card-footer">
+            <button id="copyBtn" class="btn btn-sm btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy Result
+            </button>
+            <button id="openBtn" class="btn btn-sm" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              Open
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- History Section -->
+      <section class="history-section">
+        <div class="history-header">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Recent History
+          </h2>
+          <button id="clearHistoryBtn" class="btn btn-sm">Clear History</button>
+        </div>
+        <div id="historyList" class="history-cards">
+          <!-- History items injected here -->
+        </div>
+      </section>
+    </main>
+
+    <footer>
+        &copy; 2026 Nexus URL • Offline Powered • No Tracking
+    </footer>
   </div>
+
+  <div id="toastContainer" class="toast-container"></div>
 
   <script>
     (() => {
       'use strict';
 
-      const STORAGE_KEY = 'url-tool-history-v2';
-      const THEME_KEY = 'url-tool-theme-v2';
-      const MAX_HISTORY = 5;
+      const KEYS = {
+        HISTORY: 'nexus-url-history',
+        THEME: 'nexus-url-theme-pref'
+      };
 
       const els = {
-        body: document.body,
         input: document.getElementById('inputText'),
         output: document.getElementById('outputText'),
+        inputLen: document.getElementById('inputLen'),
+        outputLen: document.getElementById('outputLen'),
+        urlPill: document.getElementById('urlPill'),
+        modeRadios: document.querySelectorAll('input[name="mode"]'),
         transformBtn: document.getElementById('transformBtn'),
         swapBtn: document.getElementById('swapBtn'),
         clearBtn: document.getElementById('clearBtn'),
+        pasteBtn: document.getElementById('pasteBtn'),
         copyBtn: document.getElementById('copyBtn'),
         openBtn: document.getElementById('openBtn'),
-        pasteBtn: document.getElementById('pasteBtn'),
-        printBtn: document.getElementById('printBtn'),
-        clearHistoryBtn: document.getElementById('clearHistoryBtn'),
         themeBtn: document.getElementById('themeBtn'),
+        printBtn: document.getElementById('printBtn'),
         historyList: document.getElementById('historyList'),
-        statusText: document.getElementById('statusText'),
-        modePill: document.getElementById('modePill'),
-        inputSizePill: document.getElementById('inputSizePill'),
-        outputSizePill: document.getElementById('outputSizePill'),
-        urlPill: document.getElementById('urlPill'),
-        toast: document.getElementById('toast'),
-        banner: document.getElementById('suggestionBanner'),
+        clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+        banner: document.getElementById('banner'),
         bannerTitle: document.getElementById('bannerTitle'),
         bannerText: document.getElementById('bannerText'),
-        bannerAction: document.getElementById('bannerAction'),
+        bannerApply: document.getElementById('bannerApply'),
         bannerDismiss: document.getElementById('bannerDismiss'),
-        modeRadios: Array.from(document.querySelectorAll('input[name="mode"]')),
       };
 
       let bannerSuggestion = null;
-      let toastTimer = null;
-      let bannerDismissSignature = '';
+      let lastDismissed = null;
 
-      function getMode() {
-        const checked = els.modeRadios.find(r => r.checked);
-        return checked ? checked.value : 'decode';
+      // --- Core Logic ---
+      function getMode() { return Array.from(els.modeRadios).find(r => r.checked).value; }
+      function setMode(val) { 
+        const r = Array.from(els.modeRadios).find(r => r.value === val);
+        if (r) { r.checked = true; updateSuggestion(); }
       }
 
-      function setMode(mode) {
-        const target = els.modeRadios.find(r => r.value === mode);
-        if (target) {
-          target.checked = true;
-          updateModeUI();
-          updateSuggestion();
-        }
-      }
+      const isUrl = (s) => /^https?:\/\//i.test(s.trim());
+      const looksEncoded = (s) => /%[0-9A-Fa-f]{2}/.test(s) || /\+/.test(s);
+      const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
 
-      function labelMode(mode) {
-        switch (mode) {
-          case 'encode': return 'Encode';
-          case 'smart': return 'Smart Encode';
-          default: return 'Decode';
-        }
-      }
-
-      function showToast(message) {
-        window.clearTimeout(toastTimer);
-        els.toast.textContent = message;
-        els.toast.classList.add('show');
-        toastTimer = window.setTimeout(() => {
-          els.toast.classList.remove('show');
-        }, 2200);
-      }
-
-      function updateStatus(message, isError = false) {
-        els.statusText.textContent = message;
-        els.statusText.style.color = isError ? 'var(--danger)' : 'var(--muted)';
-      }
-
-      function updateCounts() {
-        const inLen = els.input.value.length;
-        const outLen = els.output.value.length;
-        els.inputSizePill.textContent = `${inLen} chars`;
-        els.outputSizePill.textContent = `${outLen} chars`;
-        els.urlPill.textContent = isHttpUrl(els.output.value.trim()) ? 'Valid URL' : 'Not a URL';
-        updateOpenState();
-      }
-
-      function updateModeUI() {
-        els.modePill.textContent = `Mode: ${labelMode(getMode())}`;
-      }
-
-      function updateOpenState() {
-        const hasUrl = isHttpUrl(els.output.value.trim());
-        els.openBtn.style.opacity = hasUrl ? '1' : '0.68';
-      }
-
-      function isHttpUrl(value) {
-        if (!value) return false;
+      function smartEncode(val) {
+        if (!isUrl(val)) return encodeURIComponent(val);
         try {
-          const url = new URL(value);
-          return url.protocol === 'http:' || url.protocol === 'https:';
-        } catch {
-          return false;
-        }
-      }
-
-      function isAbsoluteUrl(value) {
-        try {
-          const url = new URL(value);
-          return Boolean(url.protocol && url.host);
-        } catch {
-          return false;
-        }
-      }
-
-      function looksEncoded(value) {
-        return /%[0-9A-Fa-f]{2}/.test(value) || /\+/.test(value);
-      }
-
-      function looksPlainText(value) {
-        return /[\u3040-\u30ff\u3400-\u9fff\s]/.test(value) || /[^\x00-\x7F]/.test(value);
-      }
-
-      function safeDecode(value) {
-        try {
-          return decodeURIComponent(value);
-        } catch {
-          return value;
-        }
-      }
-
-      function decodeText(value) {
-        return decodeURIComponent(value.replace(/\+/g, ' '));
-      }
-
-      function encodeText(value) {
-        return encodeURIComponent(value);
-      }
-
-      function encodePathPreservingSlashes(pathname) {
-        const segments = pathname.split('/');
-        return segments
-          .map(segment => encodeURIComponent(safeDecode(segment)))
-          .join('/');
-      }
-
-      function smartEncode(value) {
-        const input = value.trim();
-        if (!isAbsoluteUrl(input)) {
-          return encodeText(value);
-        }
-
-        const url = new URL(input);
-        const base = `${url.protocol}//${url.host}`;
-        const path = encodePathPreservingSlashes(url.pathname || '/');
-
-        const params = [];
-        url.searchParams.forEach((paramValue, paramKey) => {
-          params.push(`${encodeURIComponent(paramKey)}=${encodeURIComponent(paramValue)}`);
-        });
-        const search = params.length ? `?${params.join('&')}` : '';
-
-        let hash = '';
-        if (url.hash) {
-          const rawHash = url.hash.slice(1);
-          hash = `#${encodeURIComponent(safeDecode(rawHash))}`;
-        }
-
-        return `${base}${path}${search}${hash}`;
-      }
-
-      function currentTimestamp() {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mi = String(now.getMinutes()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-      }
-
-      function saveHistory(entry) {
-        try {
-          const history = loadHistory();
-          const deduped = history.filter(item => !(item.input === entry.input && item.output === entry.output && item.mode === entry.mode));
-          deduped.unshift(entry);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped.slice(0, MAX_HISTORY)));
-          renderHistory();
-        } catch {
-          updateStatus('History could not be saved in this browser mode.');
-        }
-      }
-
-      function loadHistory() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          const parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
-      }
-
-      function clearHistory() {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-          renderHistory();
-          showToast('History cleared');
-        } catch {
-          updateStatus('History could not be cleared in this browser mode.', true);
-        }
-      }
-
-      function snippet(value) {
-        return value.replace(/\s+/g, ' ').trim().slice(0, 90) || '(empty)';
-      }
-
-      function renderHistory() {
-        const history = loadHistory();
-        els.historyList.innerHTML = '';
-
-        if (!history.length) {
-          const empty = document.createElement('div');
-          empty.className = 'history-empty';
-          empty.textContent = 'まだ履歴はありません。変換するとここに最大5件表示されます。';
-          els.historyList.appendChild(empty);
-          return;
-        }
-
-        history.forEach((item, index) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'history-item';
-          button.setAttribute('aria-label', `${index + 1}番目の履歴を復元`);
-          button.innerHTML = `
-            <div class="history-top">
-              <strong>${escapeHtml(labelMode(item.mode))}</strong>
-              <span class="meta-pill">${escapeHtml(item.time)}</span>
-            </div>
-            <div class="history-snippet">In: ${escapeHtml(snippet(item.input))}</div>
-            <div class="history-bottom">
-              <div class="history-snippet">Out: ${escapeHtml(snippet(item.output))}</div>
-              <span class="meta-pill">Restore</span>
-            </div>
-          `;
-          button.addEventListener('click', () => {
-            els.input.value = item.input || '';
-            els.output.value = item.output || '';
-            setMode(item.mode || 'decode');
-            updateCounts();
-            updateStatus('History restored');
-            showToast('History restored');
-          });
-          els.historyList.appendChild(button);
-        });
-      }
-
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      async function copyToClipboard(text) {
-        if (!text) {
-          updateStatus('Nothing to copy yet.', true);
-          showToast('Nothing to copy');
-          return;
-        }
-
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-          return;
-        }
-
-        const temp = document.createElement('textarea');
-        temp.value = text;
-        temp.setAttribute('readonly', 'readonly');
-        temp.style.position = 'fixed';
-        temp.style.top = '-9999px';
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        document.body.removeChild(temp);
-      }
-
-      async function pasteFromClipboard() {
-        if (navigator.clipboard && window.isSecureContext) {
-          const text = await navigator.clipboard.readText();
-          els.input.value = text;
-          updateCounts();
-          updateSuggestion();
-          showToast('Pasted from clipboard');
-          return;
-        }
-        updateStatus('Paste is available in secure contexts only. Use browser paste instead.', true);
-      }
-
-      function reverseMode(mode) {
-        if (mode === 'decode') return 'encode';
-        return 'decode';
+          const u = new URL(val.trim());
+          const path = u.pathname.split('/').map(s => encodeURIComponent(safeDecode(s))).join('/');
+          const params = [];
+          u.searchParams.forEach((v, k) => params.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`));
+          const search = params.length ? `?${params.join('&')}` : '';
+          const hash = u.hash ? `#${encodeURIComponent(safeDecode(u.hash.slice(1)))}` : '';
+          return `${u.protocol}//${u.host}${path}${search}${hash}`;
+        } catch { return encodeURIComponent(val); }
       }
 
       function transform() {
         const input = els.input.value;
         const mode = getMode();
-
-        if (!input) {
-          els.output.value = '';
-          updateCounts();
-          updateStatus('Input is empty.');
-          return;
-        }
+        if (!input.trim()) { els.output.value = ''; return; }
 
         try {
-          let result = '';
-          if (mode === 'decode') {
-            result = decodeText(input);
-          } else if (mode === 'smart') {
-            result = smartEncode(input);
-          } else {
-            result = encodeText(input);
-          }
+          let res = '';
+          if (mode === 'decode') res = decodeURIComponent(input.replace(/\+/g, ' '));
+          else if (mode === 'smart') res = smartEncode(input);
+          else res = encodeURIComponent(input);
 
-          els.output.value = result;
-          updateCounts();
-          updateStatus(`${labelMode(mode)} completed.`);
-
-          saveHistory({
-            input,
-            output: result,
-            mode,
-            time: currentTimestamp(),
-          });
-        } catch (error) {
-          els.output.value = '';
-          updateCounts();
-          updateStatus(`Conversion failed: ${error.message}`, true);
+          els.output.value = res;
+          saveHistory({ input, output: res, mode, time: new Date().toLocaleString() });
+          showToast(`Successfully transformed (${mode})`);
+          updateUI();
+        } catch (e) {
+          showToast('Error: Invalid format', true);
         }
       }
 
-      function swapValues() {
-        const currentMode = getMode();
-        const currentInput = els.input.value;
-        const currentOutput = els.output.value;
-        els.input.value = currentOutput;
-        els.output.value = currentInput;
-        setMode(reverseMode(currentMode));
-        updateCounts();
-        updateStatus('Input and output swapped. Mode reversed.');
-        showToast('Swapped');
-      }
-
-      function clearAll() {
-        els.input.value = '';
-        els.output.value = '';
-        updateCounts();
-        updateSuggestion();
-        updateStatus('Cleared.');
+      // --- UI & State ---
+      function updateUI() {
+        const inL = els.input.value.length;
+        const outL = els.output.value.length;
+        els.inputLen.textContent = `${inL} chars`;
+        els.outputLen.textContent = `${outL} chars`;
+        const validUrl = isUrl(els.output.value);
+        els.urlPill.style.display = validUrl ? 'block' : 'none';
+        els.openBtn.disabled = !validUrl;
       }
 
       function updateSuggestion() {
-        const text = els.input.value.trim();
+        const val = els.input.value.trim();
         const mode = getMode();
-        const signature = `${mode}::${text}`;
+        if (!val || lastDismissed === `${mode}:${val}`) { hideBanner(); return; }
 
-        if (!text || bannerDismissSignature === signature) {
+        if (mode === 'decode' && !looksEncoded(val)) {
+          suggest('Switch to Encode?', 'Text doesn\'t look encoded. Use Encode if you want to mask special characters.', 'encode');
+        } else if (mode === 'encode' && isUrl(val)) {
+          suggest('Try Smart Encode?', 'Detected a full URL. Smart Encode preserves the protocol and domain while masking path/params.', 'smart');
+        } else if (mode === 'encode' && looksEncoded(val)) {
+          suggest('Switch to Decode?', 'Input looks already encoded. Decode it to read the original text.', 'decode');
+        } else {
           hideBanner();
-          return;
         }
-
-        if (mode === 'decode' && !looksEncoded(text)) {
-          showBanner('Encode をおすすめします', '現在は Decode モードですが、入力に %XX や + が見当たりません。通常テキストなら Encode の方が自然です。', 'encode');
-          return;
-        }
-
-        if (mode === 'encode' && isAbsoluteUrl(text)) {
-          showBanner('Smart Encode をおすすめします', 'フルURLのように見えます。スキームとホストは保持し、パスとクエリだけを変換する Smart Encode が向いています。', 'smart');
-          return;
-        }
-
-        if (mode === 'encode' && looksEncoded(text) && !looksPlainText(text)) {
-          showBanner('Decode をおすすめします', 'すでに URL エンコード済みの文字列に見えます。Decode で読める形に戻せます。', 'decode');
-          return;
-        }
-
-        if (mode === 'smart' && !isAbsoluteUrl(text)) {
-          showBanner('Encode をおすすめします', 'Smart Encode はフルURL入力向けです。通常文字列や相対パスなら Encode の方が分かりやすいです。', 'encode');
-          return;
-        }
-
-        hideBanner();
       }
 
-      function showBanner(title, text, suggestedMode) {
-        bannerSuggestion = suggestedMode;
+      function suggest(title, text, mode) {
+        bannerSuggestion = mode;
         els.bannerTitle.textContent = title;
         els.bannerText.textContent = text;
         els.banner.classList.add('show');
       }
+      function hideBanner() { els.banner.classList.remove('show'); bannerSuggestion = null; }
 
-      function hideBanner() {
-        bannerSuggestion = null;
-        els.banner.classList.remove('show');
+      function showToast(msg, isError = false) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        if (isError) t.style.background = 'var(--danger)';
+        t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"></polyline></svg> ${msg}`;
+        document.getElementById('toastContainer').appendChild(t);
+        setTimeout(() => t.remove(), 2500);
       }
 
-      function applyTheme(theme) {
-        const resolved = theme === 'dark' ? 'dark' : 'light';
-        els.body.setAttribute('data-theme', resolved);
-        els.themeBtn.textContent = resolved === 'dark' ? '☀️ Theme' : '🌙 Theme';
-        els.themeBtn.setAttribute('aria-pressed', String(resolved === 'dark'));
-        try {
-          localStorage.setItem(THEME_KEY, resolved);
-        } catch {}
+      // --- History ---
+      function saveHistory(item) {
+        const list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]');
+        const filtered = list.filter(h => h.input !== item.input || h.mode !== item.mode);
+        filtered.unshift(item);
+        localStorage.setItem(KEYS.HISTORY, JSON.stringify(filtered.slice(0, 8)));
+        renderHistory();
       }
 
-      function initTheme() {
-        let stored = null;
-        try {
-          stored = localStorage.getItem(THEME_KEY);
-        } catch {}
-        if (stored === 'light' || stored === 'dark') {
-          applyTheme(stored);
-          return;
-        }
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyTheme(prefersDark ? 'dark' : 'light');
-      }
-
-      els.transformBtn.addEventListener('click', transform);
-      els.swapBtn.addEventListener('click', swapValues);
-      els.clearBtn.addEventListener('click', clearAll);
-      els.printBtn.addEventListener('click', () => window.print());
-      els.clearHistoryBtn.addEventListener('click', clearHistory);
-      els.copyBtn.addEventListener('click', async () => {
-        try {
-          await copyToClipboard(els.output.value);
-          updateStatus('Copied to clipboard.');
-          showToast('Copied');
-        } catch {
-          updateStatus('Copy failed in this browser.', true);
-        }
-      });
-      els.openBtn.addEventListener('click', () => {
-        const value = els.output.value.trim();
-        if (!isHttpUrl(value)) {
-          updateStatus('Output is not an http/https URL.', true);
-          return;
-        }
-        window.open(value, '_blank', 'noopener,noreferrer');
-      });
-      els.pasteBtn.addEventListener('click', async () => {
-        try {
-          await pasteFromClipboard();
-        } catch {
-          updateStatus('Paste failed in this browser.', true);
-        }
-      });
-      els.themeBtn.addEventListener('click', () => {
-        const next = els.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        applyTheme(next);
-      });
-
-      els.input.addEventListener('input', () => {
-        updateCounts();
-        updateSuggestion();
-      });
-
-      els.modeRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-          bannerDismissSignature = '';
-          updateModeUI();
-          updateSuggestion();
+      function renderHistory() {
+        const list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]');
+        els.historyList.innerHTML = list.length ? '' : '<p style="color:var(--text-muted);font-size:14px">No recent history.</p>';
+        list.forEach(h => {
+          const card = document.createElement('div');
+          card.className = 'history-item';
+          card.innerHTML = `
+            <div class="hist-meta"><span class="hist-mode">${h.mode.toUpperCase()}</span> <span>${h.time}</span></div>
+            <div class="hist-snippet">In: ${h.input.slice(0, 60)}...</div>
+            <div class="hist-snippet">Out: ${h.output.slice(0, 60)}...</div>
+          `;
+          card.onclick = () => {
+            els.input.value = h.input;
+            els.output.value = h.output;
+            setMode(h.mode);
+            updateUI();
+            showToast('History item restored');
+          };
+          els.historyList.appendChild(card);
         });
-      });
+      }
 
-      els.bannerAction.addEventListener('click', () => {
-        if (!bannerSuggestion) return;
-        setMode(bannerSuggestion);
-        showToast(`Switched to ${labelMode(bannerSuggestion)}`);
-      });
+      // --- Theme ---
+      function initTheme() {
+        const saved = localStorage.getItem(KEYS.THEME);
+        const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const current = saved || (preferDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', current);
+        
+        // Watch system changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+          if (!localStorage.getItem(KEYS.THEME)) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+          }
+        });
+      }
+      function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(KEYS.THEME, next);
+      }
 
-      els.bannerDismiss.addEventListener('click', () => {
-        bannerDismissSignature = `${getMode()}::${els.input.value.trim()}`;
-        hideBanner();
-      });
+      // --- Events ---
+      els.transformBtn.onclick = transform;
+      els.copyBtn.onclick = () => {
+        navigator.clipboard.writeText(els.output.value).then(() => showToast('Copied to clipboard'));
+      };
+      els.pasteBtn.onclick = () => {
+        navigator.clipboard.readText().then(t => { els.input.value = t; updateUI(); updateSuggestion(); showToast('Pasted'); });
+      };
+      els.clearBtn.onclick = () => { els.input.value = ''; els.output.value = ''; updateUI(); };
+      els.swapBtn.onclick = () => {
+        const tmpIn = els.input.value;
+        els.input.value = els.output.value;
+        els.output.value = tmpIn;
+        const curM = getMode();
+        if (curM !== 'smart') setMode(curM === 'decode' ? 'encode' : 'decode');
+        updateUI();
+      };
+      els.openBtn.onclick = () => window.open(els.output.value, '_blank');
+      els.themeBtn.onclick = toggleTheme;
+      els.printBtn.onclick = () => window.print();
+      els.clearHistoryBtn.onclick = () => { localStorage.removeItem(KEYS.HISTORY); renderHistory(); showToast('History cleared'); };
 
-      document.addEventListener('keydown', (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-          event.preventDefault();
-          transform();
-          return;
-        }
-      });
+      els.bannerApply.onclick = () => { if (bannerSuggestion) { setMode(bannerSuggestion); transform(); hideBanner(); } };
+      els.bannerDismiss.onclick = () => { lastDismissed = `${getMode()}:${els.input.value.trim()}`; hideBanner(); };
 
+      els.input.oninput = () => { updateUI(); updateSuggestion(); };
+      els.modeRadios.forEach(r => r.onchange = updateSuggestion);
+
+      document.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') transform(); };
+
+      // Boot
       initTheme();
-      updateModeUI();
-      updateCounts();
       renderHistory();
-      updateSuggestion();
-      updateStatus('Ready.');
+      updateUI();
     })();
   </script>
 </body>
