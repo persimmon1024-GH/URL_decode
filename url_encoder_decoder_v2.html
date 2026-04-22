@@ -6,11 +6,6 @@
   <meta name="color-scheme" content="light dark" />
   <title>Nexus URL - Encoder / Decoder</title>
   
-  <!-- Modern Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
   <style>
     :root {
       /* Palette: Vibrant Indigo & Clear Slate */
@@ -31,14 +26,16 @@
       --success: #10b981;
       --danger: #ef4444;
       --warning: #f59e0b;
+      --info: #0ea5e9;
       
       --radius-xl: 32px;
       --radius-lg: 20px;
       --radius-md: 12px;
       --radius-sm: 8px;
       
-      --font-main: 'Outfit', sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      /* System Fonts - No External Calls for Privacy */
+      --font-main: "Outfit", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "JetBrains Mono", "Liberation Mono", "Courier New", monospace;
       
       --glass: saturate(180%) blur(20px);
       --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,8 +66,7 @@
       background-image: 
         radial-gradient(at 0% 0%, color-mix(in srgb, var(--accent) 5%, transparent) 0px, transparent 50%),
         radial-gradient(at 100% 0%, color-mix(in srgb, var(--success) 5%, transparent) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, color-mix(in srgb, var(--warning) 5%, transparent) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, color-mix(in srgb, var(--danger) 5%, transparent) 0px, transparent 50%);
+        radial-gradient(at 100% 100%, color-mix(in srgb, var(--warning) 5%, transparent) 0px, transparent 50%);
       line-height: 1.5;
       overflow-x: hidden;
       display: flex;
@@ -131,6 +127,24 @@
       gap: 10px;
     }
 
+    /* --- Security Badge --- */
+    .security-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 16px;
+      width: fit-content;
+      box-shadow: var(--shadow);
+    }
+    .security-badge span { color: var(--text-muted); font-weight: 500; margin-left: 4px; }
+
     /* --- Glass Shell --- */
     .glass-outer {
       background: var(--surface);
@@ -143,13 +157,29 @@
     }
 
     /* --- Mode Switcher --- */
+    .controls-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 32px;
+    }
+    .annotation-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding-left: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .annotation-label svg { width: 14px; height: 14px; color: var(--info); }
+
     .mode-tabs {
       display: flex;
       background: var(--surface-elevated);
       padding: 6px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      margin-bottom: 32px;
       width: fit-content;
       gap: 4px;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
@@ -181,6 +211,7 @@
       color: white;
       box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent) 30%, transparent);
     }
+    .mode-tab label svg { width: 18px; height: 18px; }
 
     /* --- Layout --- */
     .main-grid {
@@ -223,6 +254,12 @@
       justify-content: space-between;
       align-items: flex-end;
       padding: 0 8px;
+    }
+
+    .card-label-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .card-label {
@@ -297,7 +334,7 @@
       gap: 10px;
       padding: 12px 24px;
       border-radius: var(--radius-md);
-      font-family: var(--font-main);
+      font-family: inherit;
       font-weight: 600;
       font-size: 15px;
       cursor: pointer;
@@ -452,11 +489,20 @@
       color: var(--text-muted);
       font-size: 13px;
       font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footer-desc {
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+        opacity: 0.8;
     }
 
     /* --- Print --- */
     @media print {
-      .header-actions, .mode-tabs, .connector, .card-footer, .history-section, .toast-container, .banner { display: none !important; }
+      .header-actions, .controls-wrapper, .connector, .card-footer, .history-section, .toast-container, .banner, .security-badge { display: none !important; }
       .app-container { margin: 0; width: 100%; }
       .glass-outer { border: none; box-shadow: none; background: white; padding: 0; }
       .main-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -482,13 +528,18 @@
       </div>
       <div class="header-actions">
         <button id="themeBtn" class="btn btn-circle" title="Toggle Theme">
-          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
         </button>
         <button id="printBtn" class="btn btn-circle" title="Print to PDF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
         </button>
       </div>
     </header>
+
+    <div class="security-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px;height:14px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      Secure & Offline <span>No external communication / 外部通信なし</span>
+    </div>
 
     <main class="glass-outer">
       <!-- Suggestion Banner -->
@@ -504,35 +555,47 @@
       </div>
 
       <!-- Mode Selector -->
-      <div class="mode-tabs">
-        <div class="mode-tab">
-          <input type="radio" id="modeDecode" name="mode" value="decode" checked>
-          <label for="modeDecode">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78z"></path><path d="M12 11c.34-.34.67-.71 1-1.09l.52-2.11L15.33 3l1.83 1.83L20 8l-4.79 1.81-2.11.52c-.38.33-.75.66-1.1 1z"></path></svg>
-            Decode
-          </label>
-        </div>
-        <div class="mode-tab">
-          <input type="radio" id="modeEncode" name="mode" value="encode">
-          <label for="modeEncode">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Encode
-          </label>
-        </div>
-        <div class="mode-tab">
-          <input type="radio" id="modeSmart" name="mode" value="smart">
-          <label for="modeSmart">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            Smart Encode
-          </label>
-        </div>
+      <div class="controls-wrapper">
+          <div class="annotation-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            変換モードを選択してください (Select transformation mode)
+          </div>
+          <div class="mode-tabs">
+            <div class="mode-tab">
+              <input type="radio" id="modeDecode" name="mode" value="decode" checked>
+              <label for="modeDecode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78z"></path><path d="M12 11c.34-.34.67-.71 1-1.09l.52-2.11L15.33 3l1.83 1.83L20 8l-4.79 1.81-2.11.52c-.38.33-.75.66-1.1 1z"></path></svg>
+                Decode
+              </label>
+            </div>
+            <div class="mode-tab">
+              <input type="radio" id="modeEncode" name="mode" value="encode">
+              <label for="modeEncode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Encode
+              </label>
+            </div>
+            <div class="mode-tab">
+              <input type="radio" id="modeSmart" name="mode" value="smart">
+              <label for="modeSmart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z"></path><path d="m14 10-2.2 2.2a2 2 0 1 0 2.8 2.8l2.2-2.2a4 4 0 0 0-5.6-5.6l-2.2 2.2a6 6 0 1 0 8.4 8.4l2.2-2.2"></path></svg>
+                Smart Encode
+              </label>
+            </div>
+          </div>
+          <div class="annotation-label" id="modeHint" style="font-weight: 500; font-size: 12px; margin-top: -4px; color: var(--accent);">
+            %XX 形式の文字列を元の文字に戻します (Restore %XX strings to original text)
+          </div>
       </div>
 
       <div class="main-grid">
         <!-- Input -->
         <section class="io-card">
           <div class="card-header">
-            <h2 class="card-label">Input</h2>
+            <div class="card-label-row">
+                <h2 class="card-label">Input / 入力</h2>
+                <div class="annotation-label" style="padding:0; font-size:11px;">変換したいURLや文字列を入力</div>
+            </div>
             <div class="card-meta">
               <span id="inputLen" class="pill">0 chars</span>
             </div>
@@ -545,16 +608,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
               Paste
             </button>
-            <button id="clearBtn" class="btn btn-sm">Clear</button>
+            <button id="clearBtn" class="btn btn-sm">Clear / 消去</button>
           </div>
         </section>
 
         <!-- Connector Buttons -->
         <div class="connector">
-          <button id="transformBtn" class="btn btn-primary btn-circle" title="Transform">
+          <button id="transformBtn" class="btn btn-primary btn-circle" title="Transform / 変換実行">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
-          <button id="swapBtn" class="btn btn-circle" title="Swap Input/Output">
+          <button id="swapBtn" class="btn btn-circle" title="Swap / 入出力を入れ替え">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
           </button>
         </div>
@@ -562,7 +625,10 @@
         <!-- Output -->
         <section class="io-card">
           <div class="card-header">
-            <h2 class="card-label">Output</h2>
+            <div class="card-label-row">
+                <h2 class="card-label">Output / 出力</h2>
+                <div class="annotation-label" style="padding:0; font-size:11px;">変換結果がここに表示されます</div>
+            </div>
             <div class="card-meta">
               <span id="outputLen" class="pill">0 chars</span>
               <span id="urlPill" class="pill" style="display:none">Link Detected</span>
@@ -589,7 +655,7 @@
         <div class="history-header">
           <h2>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Recent History
+            Recent History / 履歴
           </h2>
           <button id="clearHistoryBtn" class="btn btn-sm">Clear History</button>
         </div>
@@ -600,7 +666,12 @@
     </main>
 
     <footer>
-        &copy; 2026 Nexus URL • Offline Powered • No Tracking
+        <div class="footer-desc">
+            This tool is built within a single HTML file and does not use any external scripts, libraries, or communication. Your data remains strictly on your machine.
+            <br>
+            このツールは単一のHTMLファイルで構築されており、外部ライブラリや外部通信を一切使用しません。入力データがネットワークに送信されることはなく、高いセキュリティを保持します。
+        </div>
+        <div>&copy; 2016 Ponolina Office</div>
     </footer>
   </div>
 
@@ -622,6 +693,7 @@
         outputLen: document.getElementById('outputLen'),
         urlPill: document.getElementById('urlPill'),
         modeRadios: document.querySelectorAll('input[name="mode"]'),
+        modeHint: document.getElementById('modeHint'),
         transformBtn: document.getElementById('transformBtn'),
         swapBtn: document.getElementById('swapBtn'),
         clearBtn: document.getElementById('clearBtn'),
@@ -639,6 +711,12 @@
         bannerDismiss: document.getElementById('bannerDismiss'),
       };
 
+      const MODE_DESC = {
+        decode: '%XX 形式の文字列を元の文字に戻します (Restore %XX strings to original text)',
+        encode: '文字列を完全にURLエンコードします (Completely URL-encode text)',
+        smart: 'フルURLに対して、ドメイン以外を賢くエンコードします (Smartly encode paths/params for full URLs)'
+      };
+
       let bannerSuggestion = null;
       let lastDismissed = null;
 
@@ -646,7 +724,12 @@
       function getMode() { return Array.from(els.modeRadios).find(r => r.checked).value; }
       function setMode(val) { 
         const r = Array.from(els.modeRadios).find(r => r.value === val);
-        if (r) { r.checked = true; updateSuggestion(); }
+        if (r) { r.checked = true; updateModeUI(); updateSuggestion(); }
+      }
+
+      function updateModeUI() {
+          const mode = getMode();
+          els.modeHint.textContent = MODE_DESC[mode];
       }
 
       const isUrl = (s) => /^https?:\/\//i.test(s.trim());
@@ -679,10 +762,10 @@
 
           els.output.value = res;
           saveHistory({ input, output: res, mode, time: new Date().toLocaleString() });
-          showToast(`Successfully transformed (${mode})`);
+          showToast(`Transformed / 完了 (${mode})`);
           updateUI();
         } catch (e) {
-          showToast('Error: Invalid format', true);
+          showToast('Error: Invalid format / 不正な形式', true);
         }
       }
 
@@ -732,7 +815,8 @@
 
       // --- History ---
       function saveHistory(item) {
-        const list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]');
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]'); } catch { list = []; }
         const filtered = list.filter(h => h.input !== item.input || h.mode !== item.mode);
         filtered.unshift(item);
         localStorage.setItem(KEYS.HISTORY, JSON.stringify(filtered.slice(0, 8)));
@@ -740,8 +824,9 @@
       }
 
       function renderHistory() {
-        const list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]');
-        els.historyList.innerHTML = list.length ? '' : '<p style="color:var(--text-muted);font-size:14px">No recent history.</p>';
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem(KEYS.HISTORY) || '[]'); } catch { list = []; }
+        els.historyList.innerHTML = list.length ? '' : '<p style="color:var(--text-muted);font-size:14px">No recent history / 履歴なし</p>';
         list.forEach(h => {
           const card = document.createElement('div');
           card.className = 'history-item';
@@ -755,7 +840,7 @@
             els.output.value = h.output;
             setMode(h.mode);
             updateUI();
-            showToast('History item restored');
+            showToast('Restored / 復元しました');
           };
           els.historyList.appendChild(card);
         });
@@ -768,7 +853,6 @@
         const current = saved || (preferDark ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', current);
         
-        // Watch system changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
           if (!localStorage.getItem(KEYS.THEME)) {
             document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
@@ -785,10 +869,10 @@
       // --- Events ---
       els.transformBtn.onclick = transform;
       els.copyBtn.onclick = () => {
-        navigator.clipboard.writeText(els.output.value).then(() => showToast('Copied to clipboard'));
+        navigator.clipboard.writeText(els.output.value).then(() => showToast('Copied / コピー完了'));
       };
       els.pasteBtn.onclick = () => {
-        navigator.clipboard.readText().then(t => { els.input.value = t; updateUI(); updateSuggestion(); showToast('Pasted'); });
+        navigator.clipboard.readText().then(t => { els.input.value = t; updateUI(); updateSuggestion(); showToast('Pasted / 貼り付け'); });
       };
       els.clearBtn.onclick = () => { els.input.value = ''; els.output.value = ''; updateUI(); };
       els.swapBtn.onclick = () => {
@@ -802,13 +886,13 @@
       els.openBtn.onclick = () => window.open(els.output.value, '_blank');
       els.themeBtn.onclick = toggleTheme;
       els.printBtn.onclick = () => window.print();
-      els.clearHistoryBtn.onclick = () => { localStorage.removeItem(KEYS.HISTORY); renderHistory(); showToast('History cleared'); };
+      els.clearHistoryBtn.onclick = () => { localStorage.removeItem(KEYS.HISTORY); renderHistory(); showToast('Cleared / 消去完了'); };
 
       els.bannerApply.onclick = () => { if (bannerSuggestion) { setMode(bannerSuggestion); transform(); hideBanner(); } };
       els.bannerDismiss.onclick = () => { lastDismissed = `${getMode()}:${els.input.value.trim()}`; hideBanner(); };
 
       els.input.oninput = () => { updateUI(); updateSuggestion(); };
-      els.modeRadios.forEach(r => r.onchange = updateSuggestion);
+      els.modeRadios.forEach(r => r.onchange = () => { updateModeUI(); updateSuggestion(); });
 
       document.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') transform(); };
 
@@ -816,6 +900,7 @@
       initTheme();
       renderHistory();
       updateUI();
+      updateModeUI();
     })();
   </script>
 </body>
